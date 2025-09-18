@@ -66,3 +66,13 @@ public class BookRaw
     public string[]? Authors { get; set; }
     public string? Description { get; set; }
 }
+
+// DTO za izlaz 
+public class BookSentimentDto
+{
+    public string Title { get; set; } = "";
+    public string Authors { get; set; } = "";
+    public string Description { get; set; } = "";
+    public float SentimentScore { get; set; }
+    public string SentimentLabel { get; set; } = "";
+}

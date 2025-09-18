@@ -1,4 +1,5 @@
-//support za sentiment analizu koristeci ML.NET
+// support za sentiment analizu koristeci ML.NET
+using System.Threading;      
 using Microsoft.ML;
 using Microsoft.ML.Data;
 
@@ -8,7 +9,9 @@ public class Sentiment
 {
     private readonly MLContext _ml = new(seed: 1);
     private readonly ITransformer _model;
-    private readonly PredictionEngine<Input, Output> _engine;
+
+    // Po JEDAN PredictionEngine po niti (thread-safe)
+    private readonly ThreadLocal<PredictionEngine<Input, Output>> _engines;
 
     public Sentiment()
     {
@@ -29,16 +32,26 @@ public class Sentiment
 
         var data = _ml.Data.LoadFromEnumerable(samples);
 
-        var pipeline = _ml.Transforms.Text.FeaturizeText("Features", nameof(Input.Text))
-            .Append(_ml.BinaryClassification.Trainers.SdcaLogisticRegression(labelColumnName: nameof(Input.Label), featureColumnName: "Features"));
+        var pipeline =
+            _ml.Transforms.Text.FeaturizeText("Features", nameof(Input.Text))
+               .Append(_ml.BinaryClassification.Trainers.SdcaLogisticRegression(
+                   labelColumnName: nameof(Input.Label),
+                   featureColumnName: "Features"));
 
         _model = pipeline.Fit(data);
-        _engine = _ml.Model.CreatePredictionEngine<Input, Output>(_model);
+
+        // ← ISPRAVNO: factory koji pravi PredictionEngine za SVAKU NIT posebno
+        _engines = new ThreadLocal<PredictionEngine<Input, Output>>(
+            () => _ml.Model.CreatePredictionEngine<Input, Output>(_model),
+            trackAllValues: false
+        );
     }
 
     public (float Score, string Label) Predict(string text)
     {
-        var pred = _engine.Predict(new Input { Text = text });
+        // Uzmi engine za TEKUĆU nit
+        var engine = _engines.Value!;
+        var pred = engine.Predict(new Input { Text = text ?? "" });
         var label = pred.PredictedLabel ? "Positive" : "Negative";
         return (pred.Probability, label);
     }
