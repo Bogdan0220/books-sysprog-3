@@ -12,6 +12,8 @@ Napomene:
 - Za realizaciju koristiti biblioteku **Reactive Extensions for .NET (Rx)**.  
 - Po defaultu, Rx je single-threaded rešenje; ukoliko se uključe multithreading i Scheduleri, dobija se veći broj poena.  
 
+- Primer poziva: http://localhost:5057/books?q=potter
+
 ---
 
 ## Ideja rešenja
