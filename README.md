@@ -24,13 +24,7 @@ Na svaku pretragu (`/books?q=...&max=...`) server:
 1. Prima zahtev preko browsera.  
 2. Loguje zahtev (metod, ruta, vreme obrade).  
 3. Putem `BooksClient` klase kontaktira **Google Books API** i dobija listu knjiga.  
-4. Pokreće **Rx pipeline**:  
-   - `FromAsync` → asinhrono dobavljanje knjiga  
-   - `SelectMany` → prolazak kroz svaku knjigu  
-   - `Where` → preskače knjige bez opisa  
-   - `ObserveOn(TaskPoolScheduler.Default)` → pokreće sentiment analizu paralelno na više niti  
-   - `Select` → računa sentiment za svaki opis pomoću **ML.NET** modela  
-   - `Merge + ToArray` → spaja rezultate nazad u JSON listu  
+4. Asinhrono obrađuje svaku knjigu: pokreće sentiment analizu opisa, filtrira knjige bez opisa, i spaja rezultate nazad u JSON listu.
 5. Kao odgovor vraća JSON sa poljima:  
    - `Title`  
    - `Authors`  
